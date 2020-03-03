@@ -13,6 +13,7 @@ type KittiesRepositoryInterface interface {
 	FindAll() ([]Kitty, error)
 	Delete(uuid.UUID) error
 	Insert(*Kitty) error
+	Get(uuid.UUID) (Kitty, error)
 }
 
 // KittiesController struct
@@ -32,6 +33,24 @@ func NewKittiesController(repo KittiesRepositoryInterface) *KittiesController {
 // Index return all kities
 func (c *KittiesController) Index(w http.ResponseWriter, r *http.Request) {
 	k, err := c.repo.FindAll()
+	if c.HandleError(err, w) {
+		return
+	}
+
+	c.SendJSON(w, &k, http.StatusOK)
+}
+
+// Get return one kitty by ID
+func (c *KittiesController) Get(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	uuid, err := uuid.FromString(vars["id"])
+	if err != nil {
+		c.SendJSON(w, nil, http.StatusBadRequest)
+		return
+	}
+
+	k, err := c.repo.Get(uuid)
 	if c.HandleError(err, w) {
 		return
 	}

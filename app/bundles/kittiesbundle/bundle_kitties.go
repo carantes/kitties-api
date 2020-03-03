@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/carantes/kitties-api/app/core"
+	"github.com/jinzhu/gorm"
 )
 
 // KittiesBundle handle kitties resources
@@ -12,8 +13,8 @@ type KittiesBundle struct {
 }
 
 // NewKittiesBundle instance
-func NewKittiesBundle() core.Bundle {
-	repo := NewKittiesRepository()
+func NewKittiesBundle(db *gorm.DB) core.Bundle {
+	repo := NewKittiesRepository(db)
 	kc := NewKittiesController(repo)
 
 	r := []core.Route{
@@ -21,6 +22,11 @@ func NewKittiesBundle() core.Bundle {
 			Method:  http.MethodGet,
 			Path:    "/kitties",
 			Handler: kc.Index,
+		},
+		core.Route{
+			Method:  http.MethodGet,
+			Path:    "/kitties/{id}",
+			Handler: kc.Get,
 		},
 		core.Route{
 			Method:  http.MethodPost,

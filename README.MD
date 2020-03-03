@@ -11,7 +11,7 @@ Sample restful golang API
 ## Capabilites
 
 - Gorilla MUX HTTP Router
-- DotEnv (.env)
+- GO DotEnv (.env)
 - UUID
 - ORM
 

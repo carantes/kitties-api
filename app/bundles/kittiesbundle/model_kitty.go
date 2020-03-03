@@ -1,21 +1,20 @@
 package kittiesbundle
 
-import uuid "github.com/satori/go.uuid"
+import (
+	"github.com/carantes/kitties-api/app/core"
+)
 
 //Kitty struct
 type Kitty struct {
-	ID        uuid.UUID
-	Name      string
-	Breed     string
-	BirthDate string
-	Errors    map[string]string
+	core.Base
+	Name      string `json:"name" gorm:"column:name;size:128;not null;"`
+	Breed     string `json:"breed" gorm:"column:breed;size:128;"`
+	BirthDate string `json:"birth_date" gorm:"column:birth_date;size:128;"`
 }
 
 //NewKitty create a new kitty
-func NewKitty(id string, name string, breed string, birthDate string) *Kitty {
-	uuid, _ := uuid.FromString(id)
+func NewKitty(name string, breed string, birthDate string) *Kitty {
 	return &Kitty{
-		ID:        uuid,
 		Name:      name,
 		Breed:     breed,
 		BirthDate: birthDate,
