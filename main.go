@@ -14,14 +14,21 @@ import (
 )
 
 func main() {
-	// TODO: Dont need to init db every time app run
-	err := initDB()
+	// Load envs
+	cfg := loadConfig()
 
+	// Init DB
+	db, err := initDB(cfg.DBType, cfg.DBConnection)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
 
-	startServer(":8080")
+	// Init Bundles
+	bundles := initBundles(db)
+
+	// Start Server
+	startServer(":8080", cfg.APIPrefix, bundles)
 }
 
 func initBundles(db *gorm.DB) []core.Bundle {
@@ -30,12 +37,10 @@ func initBundles(db *gorm.DB) []core.Bundle {
 	}
 }
 
-func initDB() error {
-	cfg := loadConfig()
-	db, err := gorm.Open(cfg.DBType, cfg.DBConnection)
-
+func initDB(dbType string, dbConnection string) (*gorm.DB, error) {
+	db, err := gorm.Open(dbType, dbConnection)
 	if err != nil {
-		return err
+		return &gorm.DB{}, err
 	}
 
 	db.AutoMigrate(&kittiesbundle.Kitty{})
@@ -45,7 +50,7 @@ func initDB() error {
 	db.Create(kittiesbundle.NewKitty("Gaspar", "British", "2016-07-05"))
 	db.Create(kittiesbundle.NewKitty("Marcel", "European", "2014-05-02"))
 
-	return nil
+	return db, nil
 }
 
 func loadConfig() *core.Config {
@@ -59,20 +64,11 @@ func loadConfig() *core.Config {
 	return c
 }
 
-func startServer(addr string) error {
-	c := loadConfig()
-
-	db, err := gorm.Open(c.DBType, c.DBConnection)
-	defer db.Close()
-
-	if err != nil {
-		return err
-	}
-
+func startServer(addr string, apiPrefix string, bundles []core.Bundle) error {
 	r := mux.NewRouter()
-	s := r.PathPrefix(c.APIPrefix).Subrouter()
+	s := r.PathPrefix(apiPrefix).Subrouter()
 
-	for _, b := range initBundles(db) {
+	for _, b := range bundles {
 		for _, route := range b.GetRoutes() {
 			s.HandleFunc(route.Path, route.Handler).Methods(route.Method)
 		}
